@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Background 2 - Natal</title>
+  <style>
+    body { margin: 0; overflow: hidden; background: #1a1a1a; }
+  </style>
+</head>
+<body>
+
+  <!-- Three.js Script -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <script>
+    // Configuração Básica do Three.js
+    const scene = new THREE.Scene();
+    const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+    const renderer = new THREE.WebGLRenderer({ antialias: true });
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    document.body.appendChild(renderer.domElement);
+
+    // Neve (Partículas)
+    const snowflakes = [];
+    const snowflakeGeometry = new THREE.SphereGeometry(0.1, 6, 6);
+    const snowflakeMaterial = new THREE.MeshBasicMaterial({ color: 0xffffff });
+
+    for (let i = 0; i < 200; i++) {
+      const snowflake = new THREE.Mesh(snowflakeGeometry, snowflakeMaterial);
+      snowflake.position.set(
+        Math.random() * 100 - 50,
+        Math.random() * 60 - 30,
+        Math.random() * 100 - 50
+      );
+      scene.add(snowflake);
+      snowflakes.push(snowflake);
+    }
+
+    // Árvore de Natal
+    function createChristmasTree(x, y, z) {
+      const treeGroup = new THREE.Group();
+
+      // Corpo da árvore (Cone)
+      const treeGeometry = new THREE.ConeGeometry(1, 5, 8);
+      const treeMaterial = new THREE.MeshStandardMaterial({ color: 0x006400 });
+      const tree = new THREE.Mesh(treeGeometry, treeMaterial);
+      tree.position.y = 2.5;
+      treeGroup.add(tree);
+
+      // Tronco (Cilindro)
+      const trunkGeometry = new THREE.CylinderGeometry(0.2, 0.2, 1);
+      const trunkMaterial = new THREE.MeshStandardMaterial({ color: 0x8b4513 });
+      const trunk = new THREE.Mesh(trunkGeometry, trunkMaterial);
+      trunk.position.y = 0.5;
+      treeGroup.add(trunk);
+
+      // Posicionar a árvore no cenário
+      treeGroup.position.set(x, y, z);
+      scene.add(treeGroup);
+    }
+
+    // Adicionando algumas árvores de Natal
+    createChristmasTree(-10, -5, -10);
+    createChristmasTree(5, -5, -15);
+    createChristmasTree(-15, -5, -20);
+    createChristmasTree(10, -5, -25);
+
+    // Luz ambiente e luzes de Natal (pontuais)
+    const ambientLight = new THREE.AmbientLight(0x404040, 2);
+    scene.add(ambientLight);
+
+    const pointLight = new THREE.PointLight(0xff0000, 2, 50);
+    pointLight.position.set(0, 10, 0);
+    scene.add(pointLight);
+
+    // Configuração da Câmera
+    camera.position.z = 20;
+
+    // Animação
+    function animate() {
+      requestAnimationFrame(animate);
+
+      // Animação da neve
+      snowflakes.forEach(flake => {
+        flake.position.y -= 0.1;
+        if (flake.position.y < -30) {
+          flake.position.y = 30;
+          flake.position.x = Math.random() * 100 - 50;
+          flake.position.z = Math.random() * 100 - 50;
+        }
+      });
+
+      renderer.render(scene, camera);
+    }
+    animate();
+
+    // Redimensionamento
+    window.addEventListener('resize', () => {
+      renderer.setSize(window.innerWidth, window.innerHeight);
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+    });
+  </script>
+
+</body>
+</html>

@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Playground - Criar Forma</title>
+  <style>
+    body {
+      margin: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      background-color: #282c34;
+      color: white;
+      font-family: Arial, sans-serif;
+    }
+    button {
+      background-color: #61dafb;
+      border: none;
+      border-radius: 5px;
+      color: black;
+      padding: 15px 30px;
+      font-size: 1.5rem;
+      margin: 20px;
+      cursor: pointer;
+      transition: background-color 0.3s;
+    }
+    button:hover {
+      background-color: #21a1f1;
+    }
+    canvas {
+      width: 80%;
+      height: 60%;
+      border: 2px dashed #61dafb;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>Playground de Formas 3D</h1>
+  <button id="createShapeButton">Criar Forma</button>
+  <div id="canvasContainer">
+    <canvas id="canvas"></canvas>
+  </div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <script>
+    const scene = new THREE.Scene();
+    const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+    const renderer = new THREE.WebGLRenderer({ canvas: document.getElementById('canvas') });
+
+    renderer.setSize(window.innerWidth * 0.8, window.innerHeight * 0.6);
+    camera.position.z = 5;
+
+    const shapes = [];
+    let selectedShape = null; // Forma selecionada
+    let offset = new THREE.Vector3(); // Offset para o arraste
+
+    document.getElementById('createShapeButton').addEventListener('click', createShape);
+
+    function createShape() {
+      const shapeType = Math.floor(Math.random() * 3); // 0: Cube, 1: Sphere, 2: Cylinder
+      let geometry;
+      switch (shapeType) {
+        case 0:
+          geometry = new THREE.BoxGeometry();
+          break;
+        case 1:
+          geometry = new THREE.SphereGeometry(0.5, 32, 32);
+          break;
+        case 2:
+          geometry = new THREE.CylinderGeometry(0.5, 0.5, 1, 32);
+          break;
+      }
+
+      const material = new THREE.MeshBasicMaterial({ color: Math.random() * 0xffffff });
+      const shape = new THREE.Mesh(geometry, material);
+      shape.position.x = (Math.random() - 0.5) * 4;
+      shape.position.y = (Math.random() - 0.5) * 4;
+      scene.add(shape);
+      shapes.push(shape);
+
+      makeDraggable(shape);
+    }
+
+    function makeDraggable(shape) {
+      shape.userData.draggable = true; // Marcar a forma como arrastável
+      shape.cursor = 'pointer'; // Mudar o cursor quando passar sobre a forma
+    }
+
+    function onMouseDown(event) {
+      event.preventDefault();
+      const mouse = new THREE.Vector2(
+        (event.clientX / window.innerWidth) * 2 - 1,
+        -(event.clientY / window.innerHeight) * 2 + 1
+      );
+
+      const raycaster = new THREE.Raycaster();
+      raycaster.setFromCamera(mouse, camera);
+
+      const intersects = raycaster.intersectObjects(shapes);
+      if (intersects.length > 0) {
+        selectedShape = intersects[0].object; // Seleciona a forma
+        offset.copy(intersects[0].point).sub(selectedShape.position); // Calcula o offset
+      }
+    }
+
+    function onMouseMove(event) {
+      if (selectedShape) {
+        const mouse = new THREE.Vector2(
+          (event.clientX / window.innerWidth) * 2 - 1,
+          -(event.clientY / window.innerHeight) * 2 + 1
+        );
+        const raycaster = new THREE.Raycaster();
+        raycaster.setFromCamera(mouse, camera);
+        
+        const intersects = raycaster.intersectObject(scene);
+        if (intersects.length > 0) {
+          selectedShape.position.copy(intersects[0].point.sub(offset));
+        }
+      }
+    }
+
+    function onMouseUp() {
+      selectedShape = null; // Desseleciona a forma ao soltar o mouse
+    }
+
+    window.addEventListener('mousedown', onMouseDown);
+    window.addEventListener('mousemove', onMouseMove);
+    window.addEventListener('mouseup', onMouseUp);
+
+    function animate() {
+      requestAnimationFrame(animate);
+      renderer.render(scene, camera);
+    }
+
+    animate();
+
+    window.addEventListener('resize', () => {
+      const width = window.innerWidth * 0.8;
+      const height = window.innerHeight * 0.6;
+      renderer.setSize(width, height);
+      camera.aspect = width / height;
+      camera.updateProjectionMatrix();
+    });
+  </script>
+
+</body>
+</html>
